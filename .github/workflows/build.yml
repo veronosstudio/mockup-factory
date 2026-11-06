@@ -1,8 +1,9 @@
 name: Build mockups
 
 on:
-  schedule:
-    - cron: "37 10 * * *"   # about 3:37 AM Edmonton, after the lead finder
+  # Nightly schedule paused (Kash, Nov 6). Re-enable by restoring:
+  # schedule:
+  #   - cron: "37 10 * * *"
   workflow_dispatch:
     inputs:
       limit:
