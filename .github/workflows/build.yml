@@ -1,0 +1,44 @@
+name: Build mockups
+
+on:
+  schedule:
+    - cron: "37 10 * * *"   # about 3:37 AM Edmonton, after the lead finder
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "How many new contacts to build (max about 600 per run)"
+        default: "150"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: factory
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pillow playwright
+      - run: python -m playwright install --with-deps chromium
+      - name: Build
+        env:
+          SHEET_URL: ${{ secrets.SHEET_URL }}
+          SHEET_TOKEN: ${{ secrets.SHEET_TOKEN }}
+          GITHUB_ACTIONS: "true"
+        run: python factory.py --sheet --limit ${{ github.event.inputs.limit || '150' }} --workers 4
+      - name: Publish previews
+        if: always()
+        run: |
+          git config user.name "veronos-factory"
+          git config user.email "factory@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "Mockups $(date -u +%F)"
+          git pull --rebase -q || true
+          git push
