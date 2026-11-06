@@ -22,6 +22,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, ROOT)
 DOCS = os.path.join(ROOT, "docs")
 BASE_URL = os.environ.get("PREVIEW_BASE", "https://preview.veronosstudio.com")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
@@ -101,7 +102,10 @@ JS_COLLECT = """
     h1: [...document.querySelectorAll('h1')].map(txt).filter(Boolean),
     h2: [...document.querySelectorAll('h2, h3')].map(txt).filter(Boolean).slice(0, 40),
     nav: [...document.querySelectorAll('nav a, header a, [class*=menu] a')].map(txt).filter(Boolean).slice(0, 60),
-    paras: [...document.querySelectorAll('p, [class*=text] div')].map(txt).filter(t => t.length > 90).slice(0, 30),
+    paras: [...document.querySelectorAll('p, [class*=text] div, td, font, span')].map(txt).filter(t => t.length > 90 && t.length < 1200).slice(0, 40),
+    items: [...document.querySelectorAll('li, strong, b, td a, a, h4, h5')].map(txt).filter(t => t.length > 2 && t.length < 45).slice(0, 220),
+    alts: [...document.images].map(i => (i.alt || '').trim()).filter(t => t.length > 3 && t.length < 45).slice(0, 40),
+    body: (document.body ? document.body.innerText : '').slice(0, 20000),
     imgs, bgs,
     tel: [...document.querySelectorAll('a[href^="tel:"]')].map(a => a.getAttribute('href').slice(4)).slice(0, 3),
   };
@@ -145,20 +149,32 @@ def read_site(page, biz, out):
         if sz and sz[0] >= 60 and sz[0] / max(sz[1], 1) < 8: logo = "logo" + ext; break
     # photos: big images that are not the logo
     seen, photos = set(), []
-    pool = [i for i in data["imgs"] if i["w"] >= 640 and 0.55 < i["w"] / max(i["h"], 1) < 2.6]
+    pool = [i for i in data["imgs"] if i["w"] >= 380 and 0.55 < i["w"] / max(i["h"], 1) < 2.6]
     pool += [{"src": b["src"], "w": b["w"], "h": b["h"], "alt": "", "cls": "", "inHeader": False, "top": b["top"]}
-             for b in data["bgs"] if b["w"] >= 640 and b["h"] >= 250]
+             for b in data["bgs"] if b["w"] >= 500 and b["h"] >= 220]
     pool.sort(key=lambda i: i["top"])
     for c in pool:
         src = urljoin(final, c["src"])
         if src in seen or re.search(r"logo|icon|sprite|badge|\.svg|\.gif", src, re.I): continue
         seen.add(src); n = len(photos) + 1
         sz = download(src, os.path.join(out, f"p{n}.jpg"), final)
-        if sz and sz[0] >= 600 and sz[1] >= 300: photos.append(f"p{n}.jpg")
+        if sz and sz[0] >= 380 and sz[1] >= 220:
+            if sz[0] < 1100:
+                from PIL import ImageFilter
+                im = Image.open(os.path.join(out, f"p{n}.jpg")); f = 1100 / sz[0]
+                im = im.resize((1100, int(sz[1] * f)), Image.LANCZOS).filter(ImageFilter.UnsharpMask(1.2, 60, 2)); im.save(os.path.join(out, f"p{n}.jpg"), quality=84)
+            photos.append(f"p{n}.jpg")
         if len(photos) >= 4: break
     return data, final, brand, accent, logo, photos
 
 # ---------------- 2. content (only what's real) ----------------
+def sentencey(t):
+    """Real prose, not a menu mashed together: mostly lowercase, has a verb-ish word, ends like a sentence."""
+    letters = [ch for ch in t if ch.isalpha()]
+    if not letters or sum(ch.isupper() for ch in letters) / len(letters) > .35: return False
+    if not re.search(r"\b(is|are|we|our|offer|offers|provide|provides|serving|serve|specializ\w*|have|has|been|can|will|make|help)\b", t, re.I): return False
+    return True
+
 def clean(t, n):
     t = re.sub(r"\s+", " ", t or "").strip()
     if len(t) <= n: return t
@@ -167,11 +183,14 @@ def clean(t, n):
 
 def pick_services(data, name):
     out = []
-    for t in data["nav"] + data["h2"]:
+    for t in data["nav"] + data["h2"] + data.get("items", []) + data.get("alts", []):
         t = t.strip(" -|•·>").strip()
         if not (3 <= len(t) <= 38) or GENERIC.match(t) or name.lower() in t.lower(): continue
         if re.search(r"[@©]|\d{3}[\s.-]\d{3}|http|www\.|copyright|rights reserved|click|read more|learn more|we're|you", t, re.I): continue
         if len(t.split()) > 6: continue
+        nm = [w for w in re.findall(r"[a-z]{4,}", name.lower()) if w not in ("auto", "service", "services", "ltd", "inc")]
+        if any(w in t.lower() for w in nm): continue
+        if re.search(r"index|links?\b|join|team|email|find us|how to|sitemap|directions|specials|coupon|careers|photo|video|facebook|instagram|twitter|youtube|google|map\b", t, re.I): continue
         tt = t if not t.isupper() else t.title()
         if tt.lower() not in [o.lower() for o in out]: out.append(tt)
         if len(out) >= 6: break
@@ -188,8 +207,62 @@ def pick_about(data, name):
     for p in data["paras"]:
         p = clean(p, 330)
         if re.search(r"cookie|privacy|javascript|subscribe|newsletter|copyright|all rights", p, re.I): continue
-        if len(p) >= 90: return p
+        if len(p) >= 90 and sentencey(p): return p
     return ""
+
+
+PROV_RE = r"(AB|Alta\.?|Alberta|BC|B\.C\.|British Columbia|SK|Sask\.?|Saskatchewan|MB|Manitoba|ON|Ont\.?|Ontario|NS|NB|NL|PE|QC)"
+def find_city(body):
+    for m in re.finditer(r"([A-Z][A-Za-z'.]+(?:\s[A-Z][A-Za-z'.]+){0,2}),?\s+" + PROV_RE + r"\b", body or ""):
+        city = m.group(1).strip()
+        if not re.search(r"(street|st|ave|avenue|road|rd|drive|dr|box|suite|unit|hwy|highway|trail|blvd|way|crescent|close|bay)$", city, re.I) and len(city) <= 28:
+            return city.split()[-2] + " " + city.split()[-1] if len(city.split()) > 2 else city
+    return ""
+
+def find_since(body):
+    m = re.search(r"(?:since|established|est\.?|founded(?: in)?|serving[^.]{0,40}since|in business since)\s*(?:in\s*)?((?:18|19|20)\d\d)", body or "", re.I)
+    if m and 1850 <= int(m.group(1)) <= 2021: return m.group(1)
+    return ""
+
+def find_hours(body):
+    out = []
+    for m in re.finditer(r"((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\.?(?:\s*(?:-|–|to|&)\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*\.?)?)\s*:?\s*((?:\d{1,2}(?::\d\d)?\s*(?:am|pm|a\.m\.|p\.m\.)?\s*(?:-|–|to)\s*\d{1,2}(?::\d\d)?\s*(?:am|pm|a\.m\.|p\.m\.)?)|closed|by appointment)", body or "", re.I):
+        d, h = m.group(1).strip(), m.group(2).strip()
+        if d.lower() not in [x[0].lower() for x in out]: out.append((d, h))
+        if len(out) >= 6: break
+    return out if len(out) >= 2 else []
+
+def find_points(data, name):
+    """Up to 3 real sentences from their own site that say something about them (not legal or cookie text)."""
+    pts = []
+    for p in data["paras"]:
+        for sent in re.split(r"(?<=[.!?])\s+", p):
+            sent = sent.strip()
+            if not (45 <= len(sent) <= 170) or not sentencey(sent): continue
+            if re.search(r"cookie|privacy|copyright|rights reserved|javascript|click|website|newsletter|subscribe|\?$", sent, re.I): continue
+            if not re.search(r"\b(we|our|us|family|years|since|team|owned|customers?|quality|service|experience|locally|proud|guarantee|certified|licensed)\b", sent, re.I): continue
+            if sent not in pts: pts.append(sent)
+            if len(pts) >= 3: return pts
+    return pts
+
+STOCK_MAP = {"electrician": "electrician", "electrical": "electrician", "plumber": "plumber", "plumbing": "plumber", "hvac": "furnace and HVAC",
+             "heating_engineer": "furnace and HVAC", "roofer": "roofing", "painter": "painting contractor", "gardener": "landscaping",
+             "landscaper": "landscaping", "car_repair": "auto repair", "tyres": "auto repair", "car_parts": "auto repair", "truck_repair": "auto repair",
+             "motorcycle_repair": "auto repair", "car": "auto repair", "hairdresser": "hair salon", "beauty": "spa and massage", "massage": "spa and massage",
+             "cleaning": "cleaning service", "flooring": "flooring store", "floorer": "flooring store", "tiler": "flooring store", "furniture": "furniture store",
+             "florist": "florist", "gift": "gift shop"}
+def stock_for(cat, out):
+    try:
+        idx = json.load(open(os.path.join(ROOT, "stock", "INDEX.json")))
+        files = idx.get(STOCK_MAP.get(cat, ""), [])
+    except Exception:
+        files = []
+    used = []
+    for f in files[:3]:
+        src = os.path.join(ROOT, "stock", f)
+        if os.path.exists(src):
+            shutil.copy(src, os.path.join(out, "s_" + f)); used.append("s_" + f)
+    return used
 
 # ---------------- 3. layouts ----------------
 FONTS = [
@@ -211,7 +284,9 @@ def theme(brand, accent, seed):
     if not accent or contrast(accent, (255, 255, 255)) < 1.6: accent = shade(brand, 1.55) if lum(brand) < .2 else (242, 193, 78)
     on_brand = "#ffffff" if contrast(brand, (255, 255, 255)) >= 3 else "#111111"
     paper = shade(brand, 1.94)
-    return {"brand": hexc(brand), "dark": hexc(dark), "accent": hexc(accent), "on": on_brand, "paper": hexc(paper),
+    brand2 = shade(brand, 1.45) if lum(brand) < .25 else brand
+    return {"brand": hexc(brand), "brand2": hexc(brand2), "dark": hexc(dark), "accent": hexc(accent), "on": on_brand,
+            "paper": hexc(paper), "paper2": hexc(shade(brand, 1.88)), "line": hexc(shade(brand, 1.78)),
             "on_accent": "#111111" if lum(accent) > .35 else "#ffffff"}
 
 LAYOUTS = ["split", "fullbleed", "bold", "editorial", "panel", "minimal"]
@@ -307,18 +382,33 @@ def build(biz, browser):
     words = len(" ".join(data["h1"] + data["h2"] + data["paras"]).split())
     if words < 25 or (not photos and not logo and words < 80):
         raise RuntimeError(f"SKIP not enough real content on their site ({words} words, {len(photos)} photos, logo={bool(logo)})")
-    cat = CAT.get((biz.get("category") or "").lower(), "")
-    place = biz.get("town") or PROV.get(biz.get("province", ""), "")
+    cat_key = (biz.get("category") or "").lower()
+    cat = CAT.get(cat_key, "")
+    city = biz.get("town") or find_city(data.get("body", ""))
+    place = city or PROV.get(biz.get("province", ""), "")
     phone = biz.get("phone") or (data["tel"][0] if data["tel"] else "")
-    c = {"cat": cat, "place": place, "phone": phone, "logo": logo, "photos": photos,
-         "headline": pick_headline(data, biz, cat, place),
-         "sub": clean(data["desc"], 180) if 40 <= len(data["desc"] or "") <= 260 else (f"{cat} in {place}." if cat and place else ""),
-         "services": pick_services(data, biz["business"]), "about": pick_about(data, biz["business"]),
-         "theme": theme(brand, accent, seed)}
-    layouts = LAYOUTS if photos else [l for l in LAYOUTS if l not in PHOTO_LAYOUTS]
-    layout = layouts[seed % len(layouts)]
-    fonts = FONTS[(seed // 7) % len(FONTS)]
-    open(os.path.join(out, "index.html"), "w").write(render_html(biz, c, layout, fonts))
+    services = pick_services(data, biz["business"])
+    lead = ""
+    for h in data["h1"] + [data["desc"] or ""]:
+        h = clean(h, 170)
+        if 25 <= len(h) <= 170 and sentencey(h) and biz["business"].lower() not in h.lower()[:len(biz["business"])+2] and not re.match(r"^(welcome|home)", h, re.I):
+            lead = h; break
+    if not lead:
+        pts0 = find_points(data, biz["business"]); lead = pts0[0] if pts0 else (f"{cat} in {place}." if cat and place else "")
+    if len(services) < 3:
+        raise RuntimeError(f"SKIP could not find their services ({len(services)} found)")
+    c = {"name": biz["business"], "email": biz.get("email", ""), "phone": phone, "place": place, "logo": logo,
+         "photos": photos, "stock": stock_for(cat_key, out),
+         "kicker": " · ".join(x for x in [cat, place] if x), "lead": lead,
+         "svc_title": f"{cat} you can count on" if cat and not cat.endswith("s") else "What we do",
+         "services": services, "points": [p for p in find_points(data, biz["business"]) if p != lead][:3],
+         "about": pick_about(data, biz["business"]), "since": find_since(data.get("body", "")),
+         "hours": find_hours(data.get("body", "")), "theme": theme(brand, accent, seed)}
+    if c["svc_title"] != "What we do": c["svc_title"] = "What we do"
+    import design
+    doc, layout, font = design.render(c, seed)
+    open(os.path.join(out, "index.html"), "w").write(doc)
+    fonts = (None, None, font)
     # render concept
     ctx = browser.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1.25)
     p = ctx.new_page(); p.goto("file://" + os.path.join(out, "index.html"), wait_until="networkidle"); p.wait_for_timeout(500)
@@ -335,7 +425,7 @@ def build(biz, browser):
         if f.startswith("_") and f != "_before.png": os.remove(os.path.join(out, f))
     Image.open(os.path.join(out, "_before.png")).convert("RGB").save(os.path.join(out, "_before.jpg"), quality=70); os.remove(os.path.join(out, "_before.png"))
     return {"slug": slug, "layout": layout, "font": fonts[2], "photos": len(photos), "logo": bool(logo),
-            "services": len(c["services"]), "about": bool(c["about"]), "headline": c["headline"],
+            "services": len(c["services"]), "about": bool(c["about"]), "headline": c["lead"], "since": c["since"], "hours": len(c["hours"]), "city": c["place"],
             "preview_url": f"{BASE_URL}/{slug}/", "mockup_url": f"{BASE_URL}/{slug}/before-after.jpg"}
 
 def run(rows, workers):

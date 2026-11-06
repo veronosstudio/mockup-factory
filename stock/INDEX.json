@@ -1,0 +1,92 @@
+{
+ "plumber": [
+  "plumbing.jpg",
+  "plumbing2.jpg",
+  "plumbing3.jpg"
+ ],
+ "furnace and HVAC": [
+  "plumbing2.jpg",
+  "plumbing.jpg",
+  "plumbing3.jpg"
+ ],
+ "septic and excavation": [
+  "plumbing.jpg",
+  "plumbing3.jpg"
+ ],
+ "electrician": [
+  "electrical2.jpg",
+  "electrical.jpg",
+  "electrical3.jpg"
+ ],
+ "roofing": [
+  "roofing.jpg",
+  "roofing2.jpg",
+  "roofing3.jpg"
+ ],
+ "painting contractor": [
+  "flooring.jpg"
+ ],
+ "concrete contractor": [
+  "roofing.jpg"
+ ],
+ "landscaping": [
+  "landscaping.jpg",
+  "landscaping2.jpg"
+ ],
+ "auto repair": [
+  "auto.jpg",
+  "auto2.jpg",
+  "auto3.jpg",
+  "auto4.jpg",
+  "auto5.jpg"
+ ],
+ "auto body shop": [
+  "auto3.jpg",
+  "auto2.jpg",
+  "auto.jpg",
+  "auto5.jpg"
+ ],
+ "towing": [
+  "auto.jpg"
+ ],
+ "hair salon": [
+  "salon2.jpg",
+  "salon.jpg"
+ ],
+ "spa and massage": [
+  "spa2.jpg",
+  "spa3.jpg",
+  "spa.jpg",
+  "spa4.jpg"
+ ],
+ "cleaning service": [
+  "cleaning.jpg"
+ ],
+ "pest control": [
+  "cleaning.jpg"
+ ],
+ "flooring store": [
+  "flooring.jpg",
+  "flooring2.jpg",
+  "flooring3.jpg",
+  "flooring4.jpg"
+ ],
+ "furniture store": [
+  "furniture.jpg",
+  "furniture2.jpg",
+  "flooring2.jpg"
+ ],
+ "_credit": "Photos from Pexels (free licence)",
+ "florist": [
+  "florist.jpg",
+  "florist2.jpg",
+  "florist4.jpg",
+  "florist3.jpg"
+ ],
+ "gift shop": [
+  "giftshop.jpg",
+  "giftshop2.jpg",
+  "giftshop3.jpg",
+  "beads.jpg"
+ ]
+}
