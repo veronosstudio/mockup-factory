@@ -390,11 +390,13 @@ def build(biz, browser):
     services = pick_services(data, biz["business"])
     lead = ""
     for h in data["h1"] + [data["desc"] or ""]:
-        h = clean(h, 170)
+        h = re.sub(r"^(about us|welcome|home)\s*[:\-–]?\s*", "", clean(h, 170), flags=re.I)
         if 25 <= len(h) <= 170 and sentencey(h) and biz["business"].lower() not in h.lower()[:len(biz["business"])+2] and not re.match(r"^(welcome|home)", h, re.I):
             lead = h; break
     if not lead:
         pts0 = find_points(data, biz["business"]); lead = pts0[0] if pts0 else (f"{cat} in {place}." if cat and place else "")
+    if re.search(r"\b(has retired|have retired|permanently closed|closed permanently|no longer (?:in business|operating|open)|we have closed|ceased operations|out of business|thank you for \d+ years)\b", data.get("body", ""), re.I):
+        raise RuntimeError("SKIP business looks closed or retired")
     if len(services) < 3:
         raise RuntimeError(f"SKIP could not find their services ({len(services)} found)")
     c = {"name": biz["business"], "email": biz.get("email", ""), "phone": phone, "place": place, "logo": logo,
