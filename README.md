@@ -7,3 +7,10 @@ Each preview is labelled "Concept preview by Veronos Studio, not the official we
 - Runs nightly at about 3:37 AM Edmonton (after the lead finder), or on demand: Actions > Build mockups > Run workflow.
 - Writes each business's status ("mockup ready" or "skip") plus `preview_url` and `mockup_url` back to the sheet.
 - Skips any business whose site it can't read properly, rather than making a generic page.
+
+## Previews come down after 7 days
+
+When a preview is sent to a business, `docs/<business>/expires.txt` gets the take-down date (7 days later).
+The **Expire previews** workflow runs daily just after midnight Edmonton. It swaps expired previews for a short
+"this preview has expired, reply to Kash to bring it back" page and keeps the original in `archive/<business>/`.
+Bring one back: `python tools/expire.py revive <business> 7`.
