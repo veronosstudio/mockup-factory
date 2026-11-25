@@ -66,4 +66,7 @@ jobs:
           git config user.name "veronos-builder"; git config user.email "builder@veronosstudio.com"
           git add docs/$SLUG builder/out/$SLUG
           git commit -m "Homepage for $SLUG" || exit 0
-          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
+          git checkout -- templates && git clean -fdq templates
+          ok=0; for i in 1 2 3; do git pull --rebase -q && git push -q && ok=1 && break; sleep 5; done
+          [ $ok = 1 ] || { echo "push failed"; exit 1; }
+          echo "Live in about a minute: https://preview.veronosstudio.com/$SLUG/" >> $GITHUB_STEP_SUMMARY
