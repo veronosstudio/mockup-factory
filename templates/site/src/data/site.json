@@ -1,0 +1,159 @@
+{
+  "name": "GAJ Denture Clinic",
+  "title": "GAJ Denture Clinic | Winnipeg",
+  "metaDescription": "At the GAJ Denture Clinic, our mission is to make the process of getting your first set of dentures the most comfortable experience we can make it.",
+  "banner": "Homepage concept made for GAJ Denture Clinic by Veronos Studio",
+  "eyebrow": "Winnipeg & Morris · Over 24 years",
+  "headline": "Dentures made comfortable.",
+  "intro": "At the GAJ Denture Clinic, our mission is to make the process of getting your first set of dentures the most comfortable experience we can make it.",
+  "secondaryCta": "See our services",
+  "ctaShort": "Book now",
+  "trust": [
+    "2 locations: Winnipeg & Morris",
+    "Over 24 years in business",
+    "We come to you",
+    "Free consultation"
+  ],
+  "servicesHeading": "Everything for your dentures, in one place",
+  "servicesIntro": "",
+  "services": [
+    {
+      "title": "Complete upper and lower dentures",
+      "text": ""
+    },
+    {
+      "title": "Partial upper and lower dentures",
+      "text": ""
+    },
+    {
+      "title": "Immediate complete or partial upper and lower dentures",
+      "text": ""
+    },
+    {
+      "title": "Denture relines",
+      "text": ""
+    },
+    {
+      "title": "Denture repairs",
+      "text": ""
+    },
+    {
+      "title": "Implant-supported dentures",
+      "text": ""
+    },
+    {
+      "title": "Portrait® brand dentures",
+      "text": ""
+    },
+    {
+      "title": "Myerson® brand dentures",
+      "text": ""
+    }
+  ],
+  "person": {
+    "heading": "Meet your denturist",
+    "name": "Jamie Swiscoski",
+    "title": "Denturist",
+    "photo": "",
+    "bio": [
+      "Our clinic has been operating under new management the last six years. Denturist Jamie Swiscoski bought GAJ Denture Clinic in 2010, and with a quick changeover of owners, business continued as usual. A denturist for the past 15 years, Jamie attended the NAIT Denturist Technology diploma program in 2000, graduating in 2002."
+    ],
+    "creds": []
+  },
+  "stepsHeading": "",
+  "steps": [],
+  "reviewsSlot": "Your Google reviews go here once the site goes live.",
+  "reviewsHeading": "What patients say",
+  "visitHeading": "Two locations, one phone number",
+  "visitIntro": "Call 204-269-8091 to book.",
+  "phone": "204-269-8091",
+  "phoneTel": "+12042698091",
+  "email": "jamie@gajdentureclinic.com",
+  "locations": [
+    {
+      "name": "Winnipeg",
+      "address": [
+        "Unit 103-1180 Pembina Highway",
+        "Winnipeg, MB R3T 2A4"
+      ],
+      "hours": [
+        [
+          "Monday",
+          "9:00 AM – 5:00 PM"
+        ],
+        [
+          "Tuesday",
+          "9:00 AM – 5:00 PM"
+        ],
+        [
+          "Wednesday",
+          "Closed"
+        ],
+        [
+          "Thursday",
+          "9:00 AM – 5:00 PM"
+        ],
+        [
+          "Friday-Sunday",
+          "Closed"
+        ]
+      ],
+      "map": "https://www.google.com/maps/search/?api=1&query=Unit+103-1180+Pembina+Highway+Winnipeg%2C+MB+R3T+2A4"
+    },
+    {
+      "name": "Morris",
+      "address": [
+        "Unit 1-115 Railroad Ave E",
+        "Morris, MB R0G 1K0"
+      ],
+      "hours": [
+        [
+          "Wednesday",
+          "9:00 AM – 5:00 PM"
+        ],
+        [
+          "Thursday",
+          "Closed"
+        ],
+        [
+          "Friday",
+          "9:00 AM – 5:00 PM"
+        ],
+        [
+          "Saturday-Tuesday",
+          "Closed"
+        ]
+      ],
+      "map": "https://www.google.com/maps/search/?api=1&query=Unit+1-115+Railroad+Ave+E+Morris%2C+MB+R0G+1K0"
+    }
+  ],
+  "affiliations": [
+    "Denturist Association of Manitoba",
+    "Denturist Association of Canada",
+    "Member of the Manitoba Better Business Bureau"
+  ],
+  "niche": "denture",
+  "city": "Winnipeg",
+  "url": "https://www.gajdentureclinic.com/",
+  "logo": "logo.png",
+  "logoH": 44,
+  "logoW": 117,
+  "primary": "#113C5F",
+  "primaryLight": "#1074C6",
+  "accent": "#1074C6",
+  "dark": "#0C2031",
+  "brandFrom": "#0084F0",
+  "heroImage": "hero.webp",
+  "heroCredit": "",
+  "band": {
+    "image": "band.webp",
+    "alt": "",
+    "pos": "50% 35%",
+    "heading": "Visit us in Winnipeg",
+    "text": "Making you feel at home in our friendly office and treating you as if you’re a family member are but two ways our professional, cheerful staff works with you to create your perfect smile."
+  },
+  "heroAlt": "Winnipeg",
+  "heroPos": "50% 55%",
+  "credits": "Hero photo: Quintin Soloviev, CC BY 4.0, via Wikimedia Commons",
+  "slug": "test-gaj"
+}

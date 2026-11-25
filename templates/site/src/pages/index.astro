@@ -1,0 +1,228 @@
+---
+/**
+ * Veronos homepage (Kash, Nov 24): every word, colour and photo comes from src/data/site.json,
+ * which the builder fills from the prospect's own website. Nothing is hardcoded per client.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import site from '../data/site.json';
+
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const img = (f: string) => (f ? (f.startsWith('http') ? f : `${base}img/${f}`) : '');
+const theme = `--color-primary:${site.primary};--color-primary-light:${site.primaryLight || site.accent};--color-accent:${site.accent};--color-dark:${site.dark || site.primary};`;
+const year = new Date().getFullYear();
+const tel = `tel:${site.phoneTel}`;
+---
+
+<BaseLayout title={site.title || site.name} description={site.metaDescription || site.intro} themeStyle={theme}>
+  {site.banner && (
+    <div class="bg-[#0b1f24] px-3 py-1.5 text-center text-xs text-[#cfe3e3]">{site.banner}</div>
+  )}
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur">
+    <div class="mx-auto flex h-[72px] max-w-site items-center gap-6 px-4 sm:px-6">
+      <a href="#top" class="flex items-center gap-3" aria-label={`${site.name}, home`}>
+        {site.logo ? (
+          <img src={img(site.logo)} alt={site.name} class="h-11 w-auto" width={site.logoW || 120} height={site.logoH || 44} />
+        ) : (
+          <span class="font-heading text-xl font-extrabold tracking-tight text-primary">{site.name}</span>
+        )}
+      </a>
+      <nav class="ml-auto hidden items-center gap-7 text-[15px] font-medium text-text-muted md:flex" aria-label="Main">
+        <a href="#services" class="hover:text-primary">{site.navServices || 'Services'}</a>
+        {site.person && <a href="#about" class="hover:text-primary">About</a>}
+        <a href="#visit" class="hover:text-primary">{site.navVisit || 'Locations & hours'}</a>
+      </nav>
+      <a href={tel} class="ml-auto hidden font-semibold text-text md:ml-0 md:inline">{site.phone}</a>
+      <a href="#visit" class="ml-auto inline-flex min-h-[44px] items-center rounded-md bg-accent px-5 font-bold text-white transition-opacity hover:opacity-90 md:ml-0">{site.ctaShort || 'Book now'}</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- Hero: big real photo, headline over it -->
+    <section class="relative isolate overflow-hidden bg-dark text-white">
+      {site.heroImage && (
+        <img src={img(site.heroImage)} alt={site.heroAlt || ''} class="absolute inset-0 -z-10 h-full w-full object-cover" style={`object-position:${site.heroPos || '50% 40%'}`} fetchpriority="high" />
+      )}
+      <div class="absolute inset-0 -z-10" style="background:linear-gradient(90deg,rgba(6,18,26,.86) 0%,rgba(6,18,26,.62) 45%,rgba(6,18,26,.15) 100%)"></div>
+      <div class="absolute inset-0 -z-10 bg-[rgba(6,18,26,.55)] md:hidden"></div>
+      <div class="mx-auto max-w-site px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
+        {site.eyebrow && <p class="mb-5 inline-block rounded-full bg-white/12 px-4 py-1.5 text-sm font-semibold text-white/90 backdrop-blur">{site.eyebrow}</p>}
+        <h1 class="max-w-[15ch] font-heading text-[clamp(2.5rem,6vw,4.4rem)] font-extrabold leading-[1.04] tracking-tight !text-white">{site.headline}</h1>
+        <p class="mt-6 max-w-[38rem] text-lg leading-relaxed text-white/85 sm:text-xl">{site.intro}</p>
+        <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+          <a href={tel} class="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-md bg-accent px-7 text-lg font-bold text-white shadow-lg transition-opacity hover:opacity-90">
+            <svg class="size-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            Call {site.phone}
+          </a>
+          <a href="#services" class="inline-flex min-h-[52px] items-center justify-center rounded-md border border-white/40 px-7 text-lg font-semibold text-white transition-colors hover:bg-white hover:text-dark">{site.secondaryCta || 'See what we do'}</a>
+        </div>
+        {site.speed?.old && (
+          <div class="mt-12 inline-flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-white/15 bg-black/30 px-5 py-3 text-sm backdrop-blur">
+            <span class="text-white/70">Google mobile speed test</span>
+            <span><span class="font-bold text-[#ffb4a8]">{site.speed.old}s</span> <span class="text-white/70">your current site</span></span>
+            {site.speed.new && <span><span class="font-bold text-[#9ff0c9]">{site.speed.new}s</span> <span class="text-white/70">this new page</span></span>}
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Trust strip -->
+    {site.trust?.length > 0 && (
+      <section class="border-b border-border bg-surface">
+        <ul class="mx-auto grid max-w-site grid-cols-2 gap-x-6 gap-y-3 px-4 py-6 text-[15px] font-semibold text-text sm:px-6 md:grid-cols-4">
+          {site.trust.map((t: string) => (
+            <li class="flex items-center gap-2.5">
+              <svg class="size-5 shrink-0 text-accent" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{t}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- Services: a clean list, no stock icons -->
+    <section id="services" class="scroll-mt-20 py-section">
+      <div class="mx-auto grid max-w-site gap-12 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+        <div>
+          <h2 class="font-heading text-h2 font-extrabold tracking-tight text-text">{site.servicesHeading}</h2>
+          {site.servicesIntro && <p class="mt-4 max-w-md text-lead leading-relaxed text-text-muted">{site.servicesIntro}</p>}
+          {site.quote && (
+            <blockquote class="mt-10 border-l-0 rounded-lg bg-surface p-6">
+              <p class="font-heading text-xl font-bold leading-snug text-primary">“{site.quote.text}”</p>
+              {site.quote.by && <footer class="mt-3 text-sm text-text-muted">{site.quote.by}</footer>}
+            </blockquote>
+          )}
+        </div>
+        <ul class="divide-y divide-border border-y border-border">
+          {(site.services || []).map((s: { title: string; text?: string }) => (
+            <li class="py-6">
+              <h3 class="font-heading text-xl font-bold text-text">{s.title}</h3>
+              {s.text && <p class="mt-1.5 leading-relaxed text-text-muted">{s.text}</p>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Photo band -->
+    {site.band && (
+      <section class="relative isolate overflow-hidden bg-dark text-white">
+        <img src={img(site.band.image)} alt={site.band.alt || ''} class="absolute inset-0 -z-10 h-full w-full object-cover" style={`object-position:${site.band.pos || '50% 30%'}`} loading="lazy" />
+        <div class="absolute inset-0 -z-10" style="background:linear-gradient(90deg,rgba(6,18,26,.15) 0%,rgba(6,18,26,.55) 50%,rgba(6,18,26,.88) 100%)"></div>
+        <div class="absolute inset-0 -z-10 bg-[rgba(6,18,26,.55)] md:hidden"></div>
+        <div class="mx-auto flex max-w-site justify-end px-4 py-24 sm:px-6 lg:py-32">
+          <div class="max-w-md">
+            <h2 class="font-heading text-h2 font-extrabold tracking-tight !text-white">{site.band.heading}</h2>
+            <p class="mt-4 text-lg leading-relaxed text-white/85">{site.band.text}</p>
+            <a href={tel} class="mt-7 inline-flex min-h-[48px] items-center rounded-md bg-accent px-6 font-bold text-white hover:opacity-90">Call {site.phone}</a>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Meet the person -->
+    {site.person && (
+      <section id="about" class="scroll-mt-20 bg-surface py-section">
+        <div class="mx-auto grid max-w-site items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-20">
+          <div class="relative">
+            {site.person.photo ? (
+              <img src={img(site.person.photo)} alt={site.person.name} class="aspect-[4/5] w-full max-w-md rounded-xl object-cover shadow-xl" loading="lazy" />
+            ) : (
+              <div class="flex aspect-[4/5] w-full max-w-md flex-col justify-end rounded-xl bg-primary p-8 text-white shadow-xl">
+                <span class="font-heading text-7xl font-extrabold opacity-90">{site.person.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}</span>
+                <span class="mt-4 font-heading text-2xl font-bold">{site.person.name}</span>
+                <span class="text-white/75">{site.person.title}</span>
+                <span class="mt-6 text-xs text-white/50">Your photo goes here</span>
+              </div>
+            )}
+          </div>
+          <div>
+            <h2 class="font-heading text-h2 font-extrabold tracking-tight text-text">{site.person.heading}</h2>
+            <p class="mt-1 font-semibold text-accent">{site.person.name}{site.person.title ? `, ${site.person.title}` : ''}</p>
+            {(site.person.bio || []).map((p: string) => <p class="mt-4 leading-relaxed text-text-muted">{p}</p>)}
+            {site.person.creds?.length > 0 && (
+              <ul class="mt-6 space-y-2.5">
+                {site.person.creds.map((c: string) => (
+                  <li class="flex gap-3 text-text"><svg class="mt-0.5 size-5 shrink-0 text-accent" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>{c}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- First visit -->
+    {site.steps?.length > 0 && (
+      <section class="py-section">
+        <div class="mx-auto max-w-site px-4 sm:px-6">
+          <h2 class="font-heading text-h2 font-extrabold tracking-tight text-text">{site.stepsHeading}</h2>
+          <ol class="mt-10 grid gap-8 md:grid-cols-3">
+            {site.steps.map((s: { title: string; text: string }, i: number) => (
+              <li class="border-t-2 border-primary pt-6">
+                <span class="font-heading text-5xl font-extrabold text-primary/25">{i + 1}</span>
+                <h3 class="mt-3 font-heading text-xl font-bold text-text">{s.title}</h3>
+                <p class="mt-2 leading-relaxed text-text-muted">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    )}
+
+    <!-- Reviews slot -->
+    {site.reviewsSlot && (
+      <section class="bg-surface py-14">
+        <div class="mx-auto flex max-w-site flex-col items-start gap-4 px-4 sm:px-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="font-heading text-2xl font-extrabold text-text">{site.reviewsHeading || 'What customers say'}</h2>
+            <p class="mt-1 text-text-muted">{site.reviewsSlot}</p>
+          </div>
+          <div class="flex gap-1 text-[#d4a017]" aria-hidden="true">{[1,2,3,4,5].map(() => <svg class="size-7" viewBox="0 0 20 20" fill="currentColor"><path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.07 3.29a1 1 0 00.95.69h3.46c.97 0 1.37 1.24.59 1.81l-2.8 2.03a1 1 0 00-.36 1.12l1.07 3.29c.3.92-.76 1.69-1.54 1.12l-2.8-2.03a1 1 0 00-1.17 0l-2.8 2.03c-.78.57-1.84-.2-1.54-1.12l1.07-3.29a1 1 0 00-.36-1.12L2.98 8.72c-.78-.57-.38-1.81.59-1.81h3.46a1 1 0 00.95-.69l1.07-3.29z"/></svg>)}</div>
+        </div>
+      </section>
+    )}
+
+    <!-- Locations & hours -->
+    <section id="visit" class="scroll-mt-20 bg-dark py-section text-white">
+      <div class="mx-auto max-w-site px-4 sm:px-6">
+        <h2 class="font-heading text-h2 font-extrabold tracking-tight !text-white">{site.visitHeading || 'Visit us'}</h2>
+        <p class="mt-3 max-w-xl text-white/75">{site.visitIntro}</p>
+        <div class={`mt-10 grid gap-6 ${(site.locations || []).length > 1 ? 'md:grid-cols-2' : ''}`}>
+          {(site.locations || []).map((l: any) => (
+            <div class="rounded-xl bg-white/[.06] p-7 ring-1 ring-white/10">
+              <h3 class="font-heading text-xl font-bold !text-white">{l.name}</h3>
+              <p class="mt-3 leading-relaxed text-white/80">{l.address.map((a: string) => <>{a}<br /></>)}</p>
+              {l.map && <a href={l.map} target="_blank" rel="noopener" class="mt-2 inline-block text-sm font-semibold text-[#9fd3ff] underline underline-offset-4">Get directions</a>}
+              {l.hours?.length > 0 && (
+                <dl class="mt-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 border-t border-white/10 pt-5 text-sm">
+                  {l.hours.map((h: string[]) => <><dt class="text-white/60">{h[0]}</dt><dd class="text-white">{h[1]}</dd></>)}
+                </dl>
+              )}
+            </div>
+          ))}
+        </div>
+        <div class="mt-12 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <a href={tel} class="inline-flex min-h-[52px] items-center justify-center rounded-md bg-accent px-7 text-lg font-bold text-white hover:opacity-90">Call {site.phone}</a>
+          {site.email && <a href={`mailto:${site.email}`} class="inline-flex min-h-[52px] items-center justify-center rounded-md border border-white/30 px-7 font-semibold hover:bg-white hover:text-dark">{site.email}</a>}
+        </div>
+        {site.affiliations?.length > 0 && (
+          <p class="mt-10 text-sm text-white/55">{site.affiliations.join(' · ')}</p>
+        )}
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-[#071317] pb-24 pt-8 text-sm text-white/50 md:pb-8">
+    <div class="mx-auto flex max-w-site flex-col gap-2 px-4 sm:px-6 md:flex-row md:justify-between">
+      <span>&copy; {year} {site.name}</span>
+      {site.credits && <span>{site.credits}</span>}
+    </div>
+  </footer>
+
+  <!-- Phone: call / book bar always in reach -->
+  <div class="fixed inset-x-0 bottom-0 z-50 flex gap-2 border-t border-black/10 bg-white/95 p-3 backdrop-blur md:hidden">
+    <a href={tel} class="flex min-h-[50px] flex-1 items-center justify-center rounded-md bg-accent font-bold text-white">Call now</a>
+    <a href="#visit" class="flex min-h-[50px] flex-1 items-center justify-center rounded-md border border-primary font-semibold text-primary">Hours & directions</a>
+  </div>
+</BaseLayout>

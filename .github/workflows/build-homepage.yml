@@ -1,0 +1,69 @@
+name: Build a homepage
+
+# Reads a prospect's website and builds their new homepage at preview.veronosstudio.com/<slug>/.
+# Nothing is sent to anyone: Kash checks builder/out/<slug>/review.md and the page, then sends the link himself.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Their current website"
+        required: true
+      slug:
+        description: "Page address (blank = from their business name)"
+        required: false
+        default: ""
+      hero:
+        description: "auto = their photo unless it looks like stock, own = always theirs, city = photo of their city"
+        required: false
+        default: "auto"
+      niche:
+        description: "blank = detect (dental, denture, health, law, trades, auto, salon, generic)"
+        required: false
+        default: ""
+
+concurrency:
+  group: build-homepage
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          cd templates/site && pnpm install --frozen-lockfile=false && cd ../..
+          pip install playwright pillow
+          python -m playwright install --with-deps chromium
+      - name: Build their homepage
+        env:
+          URL: ${{ github.event.inputs.url }}
+          SLUG: ${{ github.event.inputs.slug }}
+          HERO: ${{ github.event.inputs.hero }}
+          NICHE: ${{ github.event.inputs.niche }}
+        run: |
+          ARGS="hero=${HERO:-auto}"
+          [ -n "$SLUG" ] && ARGS="$ARGS slug=$SLUG"
+          [ -n "$NICHE" ] && ARGS="$ARGS niche=$NICHE"
+          python builder/build_homepage.py "$URL" $ARGS | tee build.log
+          S=$(grep '^SLUG=' build.log | cut -d= -f2); echo "SLUG=$S" >> $GITHUB_ENV
+          cat builder/out/$S/review.md >> $GITHUB_STEP_SUMMARY
+      - name: Publish
+        run: |
+          git config user.name "veronos-builder"; git config user.email "builder@veronosstudio.com"
+          git add docs/$SLUG builder/out/$SLUG
+          git commit -m "Homepage for $SLUG" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done

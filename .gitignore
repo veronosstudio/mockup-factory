@@ -1,2 +1,9 @@
 __pycache__/
 last_results.json
+builder/out/*/raw.json
+builder/out/*/their-site.png
+builder/out/*/*.webp
+builder/out/*/logo.png
+templates/site/node_modules
+templates/site/dist
+templates/site/.astro
