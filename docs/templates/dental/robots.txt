@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://preview.veronosstudio.com/templates/dental/sitemap-index.xml
