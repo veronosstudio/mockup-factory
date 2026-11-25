@@ -15,7 +15,7 @@ When their site has no usable photo, the hero is a free-licensed photo of their 
 import asyncio, colorsys, io, json, os, re, shutil, subprocess, sys, urllib.parse
 from collections import Counter
 
-os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers")
+if os.path.isdir("/opt/pw-browsers"): os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/opt/pw-browsers")
 from playwright.async_api import async_playwright
 from PIL import Image
 
